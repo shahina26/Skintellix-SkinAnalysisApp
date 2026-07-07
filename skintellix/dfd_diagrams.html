@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skintellix — Data Flow Diagrams (DFD)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rose-blush: #F7E8E8;
+      --rose-medium: #D4737A;
+      --rose-deep: #A8404B;
+      --gold-medium: #C9A84C;
+      --cream-50: #FFFBF7;
+      --charcoal-900: #1A1410;
+      
+      --bg-color: #FFFBF7;
+      --card-bg: #FFFFFF;
+      --text-main: #1A1410;
+      --text-muted: #5A504A;
+      --border-color: #EFE4DC;
+      
+      --entity-bg: #E8F5E9;
+      --entity-stroke: #2E7D32;
+      --entity-text: #1B5E20;
+      
+      --process-bg: #E3F2FD;
+      --process-stroke: #1565C0;
+      --process-text: #0D47A1;
+      
+      --store-bg: #FFF8E1;
+      --store-stroke: #F57F17;
+      --store-text: #E65100;
+      
+      --line-color: #8D827A;
+      --line-active: #A8404B;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--rose-blush) 0%, var(--bg-color) 100%);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 2.5rem;
+      margin: 0;
+      color: var(--rose-deep);
+      letter-spacing: -0.5px;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(26, 20, 16, 0.04);
+    }
+
+    .tab-btn:hover {
+      border-color: var(--rose-medium);
+      color: var(--rose-deep);
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      background-color: var(--rose-deep);
+      border-color: var(--rose-deep);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(168, 64, 75, 0.25);
+    }
+
+    .diagram-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(26, 20, 16, 0.03);
+      display: none;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .diagram-card.active {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    /* SVG Interactive Classes */
+    .node {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .node rect, .node circle, .node path {
+      transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s;
+    }
+
+    .node:hover rect { fill: #FFF; stroke-width: 3px; }
+    .node:hover circle { fill: #FFF; stroke-width: 3px; }
+    .node:hover path { fill: #FFF; stroke-width: 3px; }
+
+    .flow-line {
+      fill: none;
+      stroke: var(--line-color);
+      stroke-width: 1.5px;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+
+    .flow-line.highlight {
+      stroke: var(--line-active) !important;
+      stroke-width: 3px !important;
+    }
+
+    .flow-label {
+      font-size: 11px;
+      font-weight: 500;
+      fill: var(--text-muted);
+      background: white;
+      transition: fill 0.3s, font-weight 0.3s;
+      user-select: none;
+    }
+
+    .flow-label.highlight {
+      fill: var(--rose-deep) !important;
+      font-weight: 700 !important;
+    }
+
+    /* Info Panel style */
+    .info-panel {
+      margin-top: 2rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .info-panel h3 {
+      margin-top: 0;
+      color: var(--rose-deep);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .info-box {
+      background: var(--bg-color);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .info-box h4 {
+      margin: 0 0 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .entity-label { color: var(--entity-text); }
+    .process-label { color: var(--process-text); }
+    .store-label { color: var(--store-text); }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+      gap: 0.5rem;
+    }
+
+    .btn-secondary {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--rose-blush);
+      color: var(--rose-deep);
+    }
+    
+    .l2-sub-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      color: var(--rose-deep);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--rose-medium);
+      padding-left: 0.75rem;
+    }
+    
+    .instructions {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: -1rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Skintellix System Design</h1>
+    <p class="subtitle">Interactive Data Flow Diagrams (DFD) — Level 0, Level 1 & Level 2</p>
+  </header>
+
+  <div class="container">
+    <div class="instructions">💡 <i>Tip: Hover over any process box, database cylinder, or client icon to highlight its exact data flow paths!</i></div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('master')">5.2.4 Master DFD (Combined)</button>
+      <button class="tab-btn" onclick="switchTab('level0')">5.2.1 Level 0 (Context)</button>
+      <button class="tab-btn" onclick="switchTab('level1')">5.2.2 Level 1 (Detailed)</button>
+      <button class="tab-btn" onclick="switchTab('level2')">5.2.3 Level 2 (Expanded)</button>
+    </div>
+
+    <!-- MASTER DFD (COMBINED) -->
+    <div id="master" class="diagram-card active">
+      <div class="controls">
+        <button class="btn-secondary" onclick="exportSVG('svg-master', 'skintellix-master-dfd.svg')">Save as SVG</button>
+      </div>
+      
+      <svg id="svg-master" width="1150" height="850" viewBox="0 0 1150 850">
+        <defs>
+          <marker id="arrow-m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#8D827A" />
+          </marker>
+          <marker id="arrow-m-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#A8404B" />
+          </marker>
+        </defs>
+
+        <!-- SUBGRAPHS / GROUPS (Visual borders) -->
+        <rect x="230" y="80" width="450" height="260" rx="15" fill="none" stroke="#EFE4DC" stroke-width="2" stroke-dasharray="6,6" />
+        <text x="245" y="105" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--text-muted)">1.0 USER INTERFACE & DISCOVERY MODULE</text>
+
+        <rect x="230" y="380" width="450" height="220" rx="15" fill="none" stroke="#EFE4DC" stroke-width="2" stroke-dasharray="6,6" />
+        <text x="245" y="405" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--text-muted)">3.0 SKIN ANALYSIS ENGINE</text>
+
+        <rect x="740" y="220" width="380" height="220" rx="15" fill="none" stroke="#EFE4DC" stroke-width="2" stroke-dasharray="6,6" />
+        <text x="755" y="245" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--text-muted)">4.0 PRICE SCRAPER MODULE</text>
+
+        <!-- FLOW PATHS -->
+        <!-- User to 1.1 -->
+        <path id="fm_u_to_11" d="M 120 180 L 270 180" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="195" y="172" class="flow-label" text-anchor="middle" id="lbl_fm_u_to_11">Search Queries / Quiz</text>
+
+        <!-- User to 2.0 -->
+        <path id="fm_u_to_20" d="M 90 260 L 90 650" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="82" y="455" class="flow-label" text-anchor="end" id="lbl_fm_u_to_20">Auth Credentials</text>
+
+        <!-- 2.0 <-> D1 -->
+        <path id="fm_20_to_d1" d="M 170 690 L 330 690" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="250" y="682" class="flow-label" text-anchor="middle" id="lbl_fm_20_to_d1">Save/Fetch Profile</text>
+
+        <!-- 2.0 -> 1.3 -->
+        <path id="fm_20_to_13" d="M 170 655 L 610 220" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="400" y="420" class="flow-label" text-anchor="start" id="lbl_fm_20_to_13">Session Status</text>
+
+        <!-- 1.1 -> 1.2 -->
+        <path id="fm_11_to_12" d="M 390 180 L 460 180" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="425" y="172" class="flow-label" text-anchor="middle" id="lbl_fm_11_to_12">Parsed Query</text>
+
+        <!-- 1.2 <-> D2 -->
+        <path id="fm_12_to_d2" d="M 530 220 L 530 450" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="522" y="325" class="flow-label" text-anchor="end" id="lbl_fm_12_to_d2">Query Catalog</text>
+
+        <!-- 1.2 -> 5.0 -->
+        <path id="fm_12_to_50" d="M 600 180 L 750 670" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="690" y="445" class="flow-label" text-anchor="start" id="lbl_fm_12_to_50">Fetch Matches</text>
+
+        <!-- 5.0 <-> D2 -->
+        <path id="fm_50_to_d2" d="M 730 690 L 600 495" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="660" y="585" class="flow-label" text-anchor="middle" id="lbl_fm_50_to_d2">Index Data</text>
+
+        <!-- 5.0 -> 1.3 -->
+        <path id="fm_50_to_13" d="M 750 670 L 610 220" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="670" y="455" class="flow-label" text-anchor="start" id="lbl_fm_50_to_13">Product List</text>
+
+        <!-- 5.0 -> 4.1 -->
+        <path id="fm_50_to_41" d="M 830 650 L 830 350" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="822" y="500" class="flow-label" text-anchor="end" id="lbl_fm_50_to_41">Trigger Sync</text>
+
+        <!-- User -> 3.1 -->
+        <path id="fm_u_to_31" d="M 120 230 L 270 450" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="210" y="355" class="flow-label" text-anchor="end" id="lbl_fm_u_to_31">Quiz selfie</text>
+
+        <!-- 3.1 -> Vision -->
+        <path id="fm_31_to_v" d="M 340 430 L 340 90" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="332" y="260" class="flow-label" text-anchor="end" id="lbl_fm_31_to_v">Upload Photo</text>
+
+        <!-- Vision -> 3.2 -->
+        <path id="fm_v_to_32" d="M 390 90 L 460 430" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="440" y="260" class="flow-label" text-anchor="start" id="lbl_fm_v_to_32">Skin metrics</text>
+
+        <!-- 3.1 -> 3.2 -->
+        <path id="fm_31_to_32" d="M 390 475 L 460 475" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="425" y="467" class="flow-label" text-anchor="middle" id="lbl_fm_31_to_32">Quiz variables</text>
+
+        <!-- 3.2 -> 3.3 -->
+        <path id="fm_32_to_33" d="M 590 475 L 610 475" class="flow-line" marker-end="url(#arrow-m)" />
+
+        <!-- 3.3 -> D1 -->
+        <path id="fm_33_to_d1" d="M 660 520 L 530 670" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="610" y="585" class="flow-label" text-anchor="start" id="lbl_fm_33_to_d1">Save Scorecard</text>
+
+        <!-- 3.3 -> 1.2 -->
+        <path id="fm_33_to_12" d="M 640 430 L 530 220" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="600" y="325" class="flow-label" text-anchor="start" id="lbl_fm_33_to_12">Match Ingredients</text>
+
+        <!-- 3.3 -> 1.3 -->
+        <path id="fm_33_to_13" d="M 640 430 L 610 220" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="635" y="325" class="flow-label" text-anchor="start" id="lbl_fm_33_to_13">Selfie Score</text>
+
+        <!-- 4.1 -> Platforms -->
+        <path id="fm_41_to_p" d="M 830 260 L 830 90" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="822" y="175" class="flow-label" text-anchor="end" id="lbl_fm_41_to_p">Scrape details</text>
+
+        <!-- Platforms -> 4.2 -->
+        <path id="fm_p_to_42" d="M 880 90 L 960 260" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="930" y="175" class="flow-label" text-anchor="start" id="lbl_fm_p_to_42">HTML response</text>
+
+        <!-- 4.2 -> 4.3 -->
+        <path id="fm_42_to_43" d="M 1000 305 L 1000 350" class="flow-line" marker-end="url(#arrow-m)" />
+
+        <!-- 4.3 <-> D3 -->
+        <path id="fm_43_to_d3" d="M 1000 440 L 1000 650" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="992" y="535" class="flow-label" text-anchor="end" id="lbl_fm_43_to_d3">Log rates</text>
+
+        <!-- 4.3 -> 1.3 -->
+        <path id="fm_43_to_13" d="M 960 395 L 610 220" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="785" y="300" class="flow-label" text-anchor="middle" id="lbl_fm_43_to_13">Compare Matrix</text>
+
+        <!-- Admin -> 5.0 -->
+        <path id="fm_a_to_50" d="M 1030 690 L 880 690" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="955" y="682" class="flow-label" text-anchor="middle" id="lbl_fm_a_to_50">Manage DB</text>
+
+        <!-- 1.3 -> User -->
+        <path id="fm_13_to_u" d="M 530 180 L 120 180" class="flow-line" marker-end="url(#arrow-m)" />
+        <text x="325" y="195" class="flow-label" text-anchor="middle" id="lbl_fm_13_to_u">Render Cards & Best Deals</text>
+
+
+        <!-- NODES -->
+        <!-- Entities -->
+        <g class="node" id="node_m_user" onmouseover="highlightFlows('m_user')" onmouseout="clearHighlights()">
+          <rect x="20" y="140" width="100" height="120" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5"/>
+          <text x="70" y="195" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Beauty</text>
+          <text x="70" y="215" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Consumer</text>
+        </g>
+
+        <g class="node" id="node_m_admin" onmouseover="highlightFlows('m_admin')" onmouseout="clearHighlights()">
+          <rect x="1030" y="650" width="100" height="80" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5"/>
+          <text x="1080" y="695" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Admin</text>
+        </g>
+
+        <g class="node" id="node_m_vision" onmouseover="highlightFlows('m_vision')" onmouseout="clearHighlights()">
+          <rect x="290" y="20" width="120" height="70" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5"/>
+          <text x="350" y="60" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Google Vision</text>
+        </g>
+
+        <g class="node" id="node_m_plat" onmouseover="highlightFlows('m_plat')" onmouseout="clearHighlights()">
+          <rect x="780" y="20" width="120" height="70" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5"/>
+          <text x="840" y="60" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Platforms Feed</text>
+        </g>
+
+        <!-- Datastores -->
+        <g class="node" id="node_m_d1" onmouseover="highlightFlows('m_d1')" onmouseout="clearHighlights()">
+          <path d="M 330 660 C 330 650, 470 650, 470 660 L 470 710 C 470 720, 330 720, 330 710 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 330 660 C 330 670, 470 670, 470 660" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="400" y="690" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D1 USER DB</text>
+        </g>
+
+        <g class="node" id="node_m_d2" onmouseover="highlightFlows('m_d2')" onmouseout="clearHighlights()">
+          <path d="M 460 460 C 460 450, 600 450, 600 460 L 600 510 C 600 520, 460 520, 460 510 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 460 460 C 460 470, 600 470, 600 460" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="530" y="490" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D2 PRODUCT DB</text>
+        </g>
+
+        <g class="node" id="node_m_d3" onmouseover="highlightFlows('m_d3')" onmouseout="clearHighlights()">
+          <path d="M 930 660 C 930 650, 1070 650, 1070 660 L 1070 710 C 1070 720, 930 720, 930 710 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 930 660 C 930 670, 1070 670, 1070 660" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="1000" y="690" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D3 PRICE HISTORY DB</text>
+        </g>
+
+        <!-- Process 1.0 Sub-nodes -->
+        <g class="node" id="node_m_p11" onmouseover="highlightFlows('m_p11')" onmouseout="clearHighlights()">
+          <circle cx="330" cy="180" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="330" y="175" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">1.1</text>
+          <text x="330" y="190" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Parse</text>
+        </g>
+        <g class="node" id="node_m_p12" onmouseover="highlightFlows('m_p12')" onmouseout="clearHighlights()">
+          <circle cx="530" cy="180" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="530" y="175" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">1.2</text>
+          <text x="530" y="190" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Fetch</text>
+        </g>
+        <g class="node" id="node_m_p13" onmouseover="highlightFlows('m_p13')" onmouseout="clearHighlights()">
+          <circle cx="610" cy="220" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="610" y="215" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">1.3</text>
+          <text x="610" y="230" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Render</text>
+        </g>
+
+        <!-- Process 2.0 -->
+        <g class="node" id="node_m_p20" onmouseover="highlightFlows('m_p20')" onmouseout="clearHighlights()">
+          <circle cx="90" cy="690" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="90" y="685" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">2.0</text>
+          <text x="90" y="700" font-family="'Outfit'" font-weight="600" font-size="10" fill="var(--process-text)" text-anchor="middle">Auth Engine</text>
+        </g>
+
+        <!-- Process 3.0 Sub-nodes -->
+        <g class="node" id="node_m_p31" onmouseover="highlightFlows('m_p31')" onmouseout="clearHighlights()">
+          <circle cx="330" cy="475" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="330" y="470" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">3.1</text>
+          <text x="330" y="485" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Preprocess</text>
+        </g>
+        <g class="node" id="node_m_p32" onmouseover="highlightFlows('m_p32')" onmouseout="clearHighlights()">
+          <circle cx="530" cy="475" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="530" y="470" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">3.2</text>
+          <text x="530" y="485" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Map</text>
+        </g>
+        <g class="node" id="node_m_p33" onmouseover="highlightFlows('m_p33')" onmouseout="clearHighlights()">
+          <circle cx="660" cy="475" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="660" y="470" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">3.3</text>
+          <text x="660" y="485" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Calculate</text>
+        </g>
+
+        <!-- Process 4.0 Sub-nodes -->
+        <g class="node" id="node_m_p41" onmouseover="highlightFlows('m_p41')" onmouseout="clearHighlights()">
+          <circle cx="830" cy="305" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="830" y="300" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">4.1</text>
+          <text x="830" y="315" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Dispatch</text>
+        </g>
+        <g class="node" id="node_m_p42" onmouseover="highlightFlows('m_p42')" onmouseout="clearHighlights()">
+          <circle cx="1000" cy="265" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="1000" y="260" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">4.2</text>
+          <text x="1000" y="275" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Parse</text>
+        </g>
+        <g class="node" id="node_m_p43" onmouseover="highlightFlows('m_p43')" onmouseout="clearHighlights()">
+          <circle cx="1000" cy="395" r="30" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="1000" y="390" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">4.3</text>
+          <text x="1000" y="405" font-size="9" font-weight="600" fill="var(--process-text)" text-anchor="middle">Compare</text>
+        </g>
+
+        <!-- Process 5.0 -->
+        <g class="node" id="node_m_p50" onmouseover="highlightFlows('m_p50')" onmouseout="clearHighlights()">
+          <circle cx="810" cy="690" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="810" y="685" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">5.0</text>
+          <text x="810" y="700" font-family="'Outfit'" font-weight="600" font-size="10" fill="var(--process-text)" text-anchor="middle">Catalog</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- LEVEL 0 TAB -->
+    <div id="level0" class="diagram-card">
+      <div class="controls">
+        <button class="btn-secondary" onclick="exportSVG('svg-l0', 'skintellix-dfd-level0.svg')">Save as SVG</button>
+      </div>
+      
+      <svg id="svg-l0" width="850" height="520" viewBox="0 0 850 520">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#8D827A" />
+          </marker>
+          <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#A8404B" />
+          </marker>
+          <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#1A1410" flood-opacity="0.06" />
+          </filter>
+        </defs>
+
+        <rect width="100%" height="100%" fill="none" />
+
+        <!-- FLOW LINES -->
+        <path id="f0_user_to_sys" d="M 190 230 L 320 230" class="flow-line" marker-end="url(#arrow)" />
+        <text x="255" y="222" class="flow-label" text-anchor="middle" id="lbl_f0_user_to_sys">1. Quiz & Image</text>
+
+        <path id="f0_sys_to_user" d="M 320 280 L 190 280" class="flow-line" marker-end="url(#arrow)" />
+        <text x="255" y="297" class="flow-label" text-anchor="middle" id="lbl_f0_sys_to_user">2. Scorecard & Deals</text>
+
+        <path id="f0_admin_to_sys" d="M 660 230 L 530 230" class="flow-line" marker-end="url(#arrow)" />
+        <text x="595" y="222" class="flow-label" text-anchor="middle" id="lbl_f0_admin_to_sys">3. Manage Products</text>
+
+        <path id="f0_sys_to_admin" d="M 530 280 L 660 280" class="flow-line" marker-end="url(#arrow)" />
+        <text x="595" y="297" class="flow-label" text-anchor="middle" id="lbl_f0_sys_to_admin">4. Analytics Reports</text>
+
+        <path id="f0_sys_to_vision" d="M 405 180 L 405 110" class="flow-line" marker-end="url(#arrow)" />
+        <text x="397" y="150" class="flow-label" text-anchor="end" id="lbl_f0_sys_to_vision">5. Upload Image</text>
+
+        <path id="f0_vision_to_sys" d="M 445 110 L 445 180" class="flow-line" marker-end="url(#arrow)" />
+        <text x="453" y="150" class="flow-label" text-anchor="start" id="lbl_f0_vision_to_sys">6. Skin Metrics</text>
+
+        <path id="f0_sys_to_plat" d="M 405 330 L 405 400" class="flow-line" marker-end="url(#arrow)" />
+        <text x="397" y="370" class="flow-label" text-anchor="end" id="lbl_f0_sys_to_plat">7. Scrape Requests</text>
+
+        <path id="f0_plat_to_sys" d="M 445 400 L 445 330" class="flow-line" marker-end="url(#arrow)" />
+        <text x="453" y="370" class="flow-label" text-anchor="start" id="lbl_f0_plat_to_sys">8. Price Feed</text>
+
+        <!-- NODES -->
+        <g class="node" id="node_l0_user" onmouseover="highlightFlows('l0_user')" onmouseout="clearHighlights()">
+          <rect x="30" y="200" width="160" height="110" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="110" y="235" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">BEAUTY CONSUMER</text>
+          <text x="110" y="255" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">/ USER</text>
+          <text x="110" y="280" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Takes Skin Quiz</text>
+          <text x="110" y="295" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Compares Prices</text>
+        </g>
+
+        <g class="node" id="node_l0_system" onmouseover="highlightFlows('l0_system')" onmouseout="clearHighlights()">
+          <circle cx="425" cy="255" r="75" fill="#EEF2FC" stroke="#406BA8" stroke-width="2" filter="url(#shadow)" />
+          <text x="425" y="235" font-family="'Outfit'" font-weight="600" font-size="13" fill="var(--process-text)" text-anchor="middle">SKINTELLIX</text>
+          <text x="425" y="255" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">AI PLATFORM &</text>
+          <text x="425" y="275" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">PRICE COMPARISON</text>
+        </g>
+
+        <g class="node" id="node_l0_admin" onmouseover="highlightFlows('l0_admin')" onmouseout="clearHighlights()">
+          <rect x="660" y="200" width="160" height="110" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="740" y="235" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">ADMIN / CREATOR</text>
+          <text x="740" y="260" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Manages Catalog</text>
+          <text x="740" y="275" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Writes Blog Posts</text>
+          <text x="740" y="290" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Views Analytics</text>
+        </g>
+
+        <g class="node" id="node_l0_vision" onmouseover="highlightFlows('l0_vision')" onmouseout="clearHighlights()">
+          <rect x="345" y="30" width="160" height="80" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="425" y="65" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">GOOGLE VISION API</text>
+          <text x="425" y="85" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Cloud Image AI Engine</text>
+        </g>
+
+        <g class="node" id="node_l0_platforms" onmouseover="highlightFlows('l0_platforms')" onmouseout="clearHighlights()">
+          <rect x="345" y="400" width="160" height="90" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="425" y="435" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">E-COMMERCE API</text>
+          <text x="425" y="455" font-size="11" fill="var(--text-muted)" text-anchor="middle">• Nykaa, Amazon, Myntra,</text>
+          <text x="425" y="470" font-size="11" fill="var(--text-muted)" text-anchor="middle">Flipkart, Purplle, AJIO</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- LEVEL 1 TAB -->
+    <div id="level1" class="diagram-card">
+      <div class="controls">
+        <button class="btn-secondary" onclick="exportSVG('svg-l1', 'skintellix-dfd-level1.svg')">Save as SVG</button>
+      </div>
+
+      <svg id="svg-l1" width="1050" height="720" viewBox="0 0 1050 720">
+        <defs>
+          <marker id="arrow-l1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#8D827A" />
+          </marker>
+          <marker id="arrow-l1-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#A8404B" />
+          </marker>
+        </defs>
+
+        <!-- FLOW LINES -->
+        <path id="f1_user_to_ui" d="M 190 200 L 290 200" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="240" y="193" class="flow-label" text-anchor="middle" id="lbl_f1_user_to_ui">Quiz, Image, Search</text>
+
+        <path id="f1_ui_to_user" d="M 290 230 L 190 230" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="240" y="247" class="flow-label" text-anchor="middle" id="lbl_f1_ui_to_user">Routine, Prices, Auth</text>
+
+        <path id="f1_ui_to_auth" d="M 315 260 L 210 375" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="240" y="320" class="flow-label" text-anchor="end" id="lbl_f1_ui_to_auth">Auth Details</text>
+
+        <path id="f1_auth_to_db" d="M 215 425 L 390 535" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="310" y="480" class="flow-label" text-anchor="end" id="lbl_f1_auth_to_db">Save/Fetch User</text>
+
+        <path id="f1_ui_to_skin" d="M 370 215 L 485 215" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="427" y="207" class="flow-label" text-anchor="middle" id="lbl_f1_ui_to_skin">Quiz Results</text>
+
+        <path id="f1_skin_to_vision" d="M 510 170 L 510 100" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="502" y="135" class="flow-label" text-anchor="end" id="lbl_f1_skin_to_vision">Upload Photo</text>
+
+        <path id="f1_vision_to_skin" d="M 550 100 L 550 170" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="558" y="135" class="flow-label" text-anchor="start" id="lbl_f1_vision_to_skin">Skin Scores</text>
+
+        <path id="f1_skin_to_proddb" d="M 530 260 L 530 350" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="522" y="305" class="flow-label" text-anchor="end" id="lbl_f1_skin_to_proddb">Fetch Routine items</text>
+
+        <path id="f1_skin_to_userdb" d="M 560 250 L 670 530" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="630" y="380" class="flow-label" text-anchor="start" id="lbl_f1_skin_to_userdb">Save Quiz Score</text>
+
+        <path id="f1_ui_to_cat" d="M 345 250 L 520 420" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="440" y="340" class="flow-label" text-anchor="start" id="lbl_f1_ui_to_cat">Product Query</text>
+
+        <path id="f1_cat_to_proddb" d="M 545 420 L 545 390" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="553" y="407" class="flow-label" text-anchor="start" id="lbl_f1_cat_to_proddb">Get Details</text>
+
+        <path id="f1_cat_to_scrape" d="M 610 445 L 755 350" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="690" y="390" class="flow-label" text-anchor="start" id="lbl_f1_cat_to_scrape">Sync Prices</text>
+
+        <path id="f1_scrape_to_plat" d="M 800 290 L 800 100" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="792" y="195" class="flow-label" text-anchor="end" id="lbl_f1_scrape_to_plat">Check Pricing</text>
+
+        <path id="f1_plat_to_scrape" d="M 840 100 L 840 290" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="848" y="195" class="flow-label" text-anchor="start" id="lbl_f1_plat_to_scrape">Price Data</text>
+
+        <path id="f1_scrape_to_hist" d="M 820 380 L 820 530" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="812" y="455" class="flow-label" text-anchor="end" id="lbl_f1_scrape_to_hist">Save Rates</text>
+
+        <path id="f1_scrape_to_ui" d="M 775 320 L 370 230" class="flow-line" marker-end="url(#arrow-l1)" />
+        <text x="580" y="270" class="flow-label" text-anchor="middle" id="lbl_f1_scrape_to_ui">Compare Results</text>
+
+        <!-- NODES -->
+        <g class="node" id="node_l1_user" onmouseover="highlightFlows('l1_user')" onmouseout="clearHighlights()">
+          <rect x="30" y="170" width="160" height="90" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="110" y="210" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">BEAUTY CONSUMER</text>
+          <text x="110" y="230" font-size="12" fill="var(--text-muted)" text-anchor="middle">/ USER</text>
+        </g>
+
+        <g class="node" id="node_l1_vision" onmouseover="highlightFlows('l1_vision')" onmouseout="clearHighlights()">
+          <rect x="450" y="30" width="160" height="70" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="530" y="70" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">GOOGLE VISION API</text>
+        </g>
+
+        <g class="node" id="node_l1_platforms" onmouseover="highlightFlows('l1_platforms')" onmouseout="clearHighlights()">
+          <rect x="750" y="30" width="160" height="70" rx="12" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="830" y="70" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">E-COMMERCE API</text>
+        </g>
+
+        <g class="node" id="node_l1_p1" onmouseover="highlightFlows('l1_p1')" onmouseout="clearHighlights()">
+          <circle cx="330" cy="215" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="330" y="210" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">1.0</text>
+          <text x="330" y="225" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">USER INTERFACE</text>
+        </g>
+
+        <g class="node" id="node_l1_p2" onmouseover="highlightFlows('l1_p2')" onmouseout="clearHighlights()">
+          <circle cx="170" cy="410" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="170" y="405" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">2.0</text>
+          <text x="170" y="420" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">AUTH ENGINE</text>
+        </g>
+
+        <g class="node" id="node_l1_p3" onmouseover="highlightFlows('l1_p3')" onmouseout="clearHighlights()">
+          <circle cx="530" cy="210" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="530" y="205" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">3.0</text>
+          <text x="530" y="220" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">SKIN ANALYSIS</text>
+        </g>
+
+        <g class="node" id="node_l1_p4" onmouseover="highlightFlows('l1_p4')" onmouseout="clearHighlights()">
+          <circle cx="820" cy="335" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="820" y="330" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">4.0</text>
+          <text x="820" y="345" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">PRICE SCRAPER</text>
+        </g>
+
+        <g class="node" id="node_l1_p5" onmouseover="highlightFlows('l1_p5')" onmouseout="clearHighlights()">
+          <circle cx="560" cy="455" r="40" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="560" y="450" font-family="'Outfit'" font-weight="600" font-size="12" fill="var(--process-text)" text-anchor="middle">5.0</text>
+          <text x="560" y="465" font-family="'Outfit'" font-weight="600" font-size="11" fill="var(--process-text)" text-anchor="middle">CATALOG & SEARCH</text>
+        </g>
+
+        <g class="node" id="node_l1_d1" onmouseover="highlightFlows('l1_d1')" onmouseout="clearHighlights()">
+          <path d="M 350 545 C 350 535, 490 535, 490 545 L 490 595 C 490 605, 350 605, 350 595 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 350 545 C 350 555, 490 555, 490 545" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="420" y="575" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D1 USER DATABASE</text>
+        </g>
+
+        <g class="node" id="node_l1_d2" onmouseover="highlightFlows('l1_d2')" onmouseout="clearHighlights()">
+          <path d="M 470 340 C 470 330, 610 330, 610 340 L 610 380 C 610 390, 470 390, 470 380 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 470 340 C 470 350, 610 350, 610 340" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="540" y="365" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D2 PRODUCT DATABASE</text>
+        </g>
+
+        <g class="node" id="node_l1_d3" onmouseover="highlightFlows('l1_d3')" onmouseout="clearHighlights()">
+          <path d="M 750 545 C 750 535, 890 535, 890 545 L 890 595 C 890 605, 750 605, 750 595 Z" fill="var(--store-bg)" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <path d="M 750 545 C 750 555, 890 555, 890 545" fill="none" stroke="var(--store-stroke)" stroke-width="1.5" />
+          <text x="820" y="575" font-family="'Outfit'" font-weight="600" fill="var(--store-text)" text-anchor="middle">D3 PRICE HISTORY DB</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- LEVEL 2 TAB -->
+    <div id="level2" class="diagram-card">
+      <div class="controls">
+        <button class="btn-secondary" onclick="exportSVG('svg-l2-1', 'skintellix-dfd-l2-ui.svg')">Save L2-UI</button>
+      </div>
+
+      <div class="l2-sub-title">1.0 User Interface & Discovery Module</div>
+      <svg id="svg-l2-1" width="850" height="300" viewBox="0 0 850 300">
+        <path d="M 170 150 L 260 150" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="215" y="142" font-size="11" fill="var(--text-muted)" text-anchor="middle">Search / Filter Request</text>
+
+        <path d="M 400 150 L 490 150" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="445" y="142" font-size="11" fill="var(--text-muted)" text-anchor="middle">Product Matches</text>
+
+        <path d="M 630 150 L 720 150" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="675" y="142" font-size="11" fill="var(--text-muted)" text-anchor="middle">Compared Result</text>
+
+        <path d="M 720 180 L 170 180" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="445" y="195" font-size="11" fill="var(--text-muted)" text-anchor="middle">Renders Comparison Cards (Best Deals)</text>
+
+        <g class="node">
+          <rect x="30" y="110" width="140" height="90" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="100" y="160" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">User</text>
+        </g>
+
+        <g class="node">
+          <rect x="260" y="110" width="140" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="330" y="145" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">1.1</text>
+          <text x="330" y="165" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Parse Query</text>
+        </g>
+
+        <g class="node">
+          <rect x="490" y="110" width="140" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="560" y="145" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">1.2</text>
+          <text x="560" y="165" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Fetch Recommendations</text>
+        </g>
+
+        <g class="node">
+          <rect x="720" y="110" width="100" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="770" y="145" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">1.3</text>
+          <text x="770" y="165" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Render Cards</text>
+        </g>
+      </svg>
+
+      <div class="l2-sub-title">3.0 Skin Analysis Module</div>
+      <svg id="svg-l2-2" width="850" height="320" viewBox="0 0 850 320">
+        <path d="M 150 150 L 220 150" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="185" y="142" font-size="11" fill="var(--text-muted)" text-anchor="middle">Quiz Answers</text>
+
+        <path d="M 360 120 L 460 70" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="400" y="80" font-size="11" fill="var(--text-muted)" text-anchor="middle">Selfie stream</text>
+
+        <path d="M 460 100 L 360 150" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="420" y="140" font-size="11" fill="var(--text-muted)" text-anchor="middle">Skin metrics</text>
+
+        <path d="M 360 170 L 500 170" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="430" y="162" font-size="11" fill="var(--text-muted)" text-anchor="middle">Conditions</text>
+
+        <path d="M 640 170 L 710 170" class="flow-line" marker-end="url(#arrow-l2)" />
+        <text x="675" y="162" font-size="11" fill="var(--text-muted)" text-anchor="middle">Scorecard</text>
+
+        <g class="node">
+          <rect x="30" y="110" width="120" height="80" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="90" y="155" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">UI Module</text>
+        </g>
+
+        <g class="node">
+          <rect x="220" y="110" width="140" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="290" y="145" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">3.1</text>
+          <text x="290" y="165" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Pre-process Input</text>
+        </g>
+
+        <g class="node">
+          <rect x="460" y="30" width="140" height="80" rx="10" fill="var(--entity-bg)" stroke="var(--entity-stroke)" stroke-width="1.5" />
+          <text x="530" y="75" font-family="'Outfit'" font-weight="600" fill="var(--entity-text)" text-anchor="middle">Google Vision</text>
+        </g>
+
+        <g class="node">
+          <rect x="500" y="130" width="140" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="570" y="165" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">3.2</text>
+          <text x="570" y="185" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Map to Ingredients</text>
+        </g>
+
+        <g class="node">
+          <rect x="710" y="130" width="110" height="90" rx="10" fill="var(--process-bg)" stroke="var(--process-stroke)" stroke-width="1.5" />
+          <text x="765" y="165" font-family="'Outfit'" font-weight="600" fill="var(--process-text)" text-anchor="middle">3.3</text>
+          <text x="765" y="185" font-size="12" font-weight="600" fill="var(--process-text)" text-anchor="middle">Compute Routine</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.diagram-card').forEach(card => card.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    const flowRelations = {
+      // Master DFD Highlights
+      'm_user': ['fm_u_to_11', 'fm_u_to_20', 'fm_u_to_31', 'fm_13_to_u'],
+      'm_admin': ['fm_a_to_50'],
+      'm_vision': ['fm_31_to_v', 'fm_v_to_32'],
+      'm_plat': ['fm_41_to_p', 'fm_p_to_42'],
+      'm_d1': ['fm_20_to_d1', 'fm_33_to_d1'],
+      'm_d2': ['fm_12_to_d2', 'fm_50_to_d2'],
+      'm_d3': ['fm_43_to_d3'],
+      'm_p11': ['fm_u_to_11', 'fm_11_to_12'],
+      'm_p12': ['fm_11_to_12', 'fm_12_to_d2', 'fm_12_to_50', 'fm_33_to_12'],
+      'm_p13': ['fm_20_to_13', 'fm_50_to_13', 'fm_33_to_13', 'fm_43_to_13', 'fm_13_to_u'],
+      'm_p20': ['fm_u_to_20', 'fm_20_to_d1', 'fm_20_to_13'],
+      'm_p31': ['fm_u_to_31', 'fm_31_to_v', 'fm_31_to_32'],
+      'm_p32': ['fm_v_to_32', 'fm_31_to_32'],
+      'm_p33': ['fm_33_to_d1', 'fm_33_to_12', 'fm_33_to_13'],
+      'm_p41': ['fm_50_to_41', 'fm_41_to_p'],
+      'm_p42': ['fm_p_to_42'],
+      'm_p43': ['fm_43_to_d3', 'fm_43_to_13'],
+      'm_p50': ['fm_12_to_50', 'fm_50_to_d2', 'fm_50_to_13', 'fm_50_to_41', 'fm_a_to_50'],
+
+      // Level 0 highlights
+      'l0_user': ['f0_user_to_sys', 'f0_sys_to_user'],
+      'l0_system': ['f0_user_to_sys', 'f0_sys_to_user', 'f0_admin_to_sys', 'f0_sys_to_admin', 'f0_sys_to_vision', 'f0_vision_to_sys', 'f0_sys_to_plat', 'f0_plat_to_sys'],
+      'l0_admin': ['f0_admin_to_sys', 'f0_sys_to_admin'],
+      'l0_vision': ['f0_sys_to_vision', 'f0_vision_to_sys'],
+      'l0_platforms': ['f0_sys_to_plat', 'f0_plat_to_sys'],
+
+      // Level 1 highlights
+      'l1_user': ['f1_user_to_ui', 'f1_ui_to_user'],
+      'l1_vision': ['f1_skin_to_vision', 'f1_vision_to_skin'],
+      'l1_platforms': ['f1_scrape_to_plat', 'f1_plat_to_scrape'],
+      'l1_p1': ['f1_user_to_ui', 'f1_ui_to_user', 'f1_ui_to_auth', 'f1_ui_to_skin', 'f1_ui_to_cat', 'f1_scrape_to_ui'],
+      'l1_p2': ['f1_ui_to_auth', 'f1_auth_to_db'],
+      'l1_p3': ['f1_ui_to_skin', 'f1_skin_to_vision', 'f1_vision_to_skin', 'f1_skin_to_proddb', 'f1_skin_to_userdb'],
+      'l1_p4': ['f1_cat_to_scrape', 'f1_scrape_to_plat', 'f1_plat_to_scrape', 'f1_scrape_to_hist', 'f1_scrape_to_ui'],
+      'l1_p5': ['f1_ui_to_cat', 'f1_cat_to_proddb', 'f1_cat_to_scrape'],
+      'l1_d1': ['f1_auth_to_db', 'f1_skin_to_userdb'],
+      'l1_d2': ['f1_skin_to_proddb', 'f1_cat_to_proddb'],
+      'l1_d3': ['f1_scrape_to_hist']
+    };
+
+    function highlightFlows(nodeKey) {
+      const activeFlows = flowRelations[nodeKey] || [];
+      const currentTab = document.querySelector('.diagram-card.active');
+      
+      activeFlows.forEach(flowId => {
+        const line = currentTab.querySelector('#' + flowId);
+        if (line) {
+          line.classList.add('highlight');
+          line.setAttribute('marker-end', flowId.startsWith('fm_') ? 'url(#arrow-m-active)' : (flowId.startsWith('f0_') ? 'url(#arrow-active)' : 'url(#arrow-l1-active)'));
+        }
+        
+        const label = currentTab.querySelector('#lbl_' + flowId);
+        if (label) {
+          label.classList.add('highlight');
+        }
+      });
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('.flow-line').forEach(line => {
+        line.classList.remove('highlight');
+        const isM = line.id.startsWith('fm_');
+        const isL0 = line.id.startsWith('f0_');
+        line.setAttribute('marker-end', isM ? 'url(#arrow-m)' : (isL0 ? 'url(#arrow)' : 'url(#arrow-l1)'));
+      });
+      document.querySelectorAll('.flow-label').forEach(label => {
+        label.classList.remove('highlight');
+      });
+    }
+
+    function exportSVG(svgId, fileName) {
+      const svgEl = document.getElementById(svgId);
+      const svgString = new XMLSerializer().serializeToString(svgEl);
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+  </script>
+</body>
+</html>

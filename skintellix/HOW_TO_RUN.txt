@@ -1,0 +1,54 @@
+========================================================================
+                      SKINTELLIX RUN INSTRUCTIONS
+========================================================================
+
+Follow these steps to install packages and run the project locally.
+
+------------------------------------------------------------------------
+1. PREREQUISITES
+------------------------------------------------------------------------
+Ensure you have the following installed on your system:
+* Node.js (version 18 or higher recommended)
+* npm (version 9 or higher)
+
+------------------------------------------------------------------------
+2. INSTALLATION
+------------------------------------------------------------------------
+To install all necessary packages for the root project, frontend, 
+and backend workspaces, open a terminal in the root directory and run:
+
+    npm run install:all
+
+------------------------------------------------------------------------
+3. RUNNING THE PROJECT (CONCURRENTLY)
+------------------------------------------------------------------------
+To start both the backend API server and the Vite frontend server 
+simultaneously, run the following command in the project root:
+
+    npm run dev
+
+Once running:
+* Frontend application: http://localhost:3000
+* Backend API:          http://localhost:5000
+
+------------------------------------------------------------------------
+4. RUNNING SERVICES INDIVIDUALLY
+------------------------------------------------------------------------
+If you prefer to run the frontend and backend in separate terminals:
+
+* To run the Backend only:
+    cd backend
+    npm run dev
+
+* To run the Frontend only:
+    cd frontend
+    npm run dev
+
+------------------------------------------------------------------------
+5. DOCKER DEPLOYMENT (OPTIONAL)
+------------------------------------------------------------------------
+To build and run all services (including MongoDB and Redis containers) 
+in production mode, run:
+
+    docker-compose up --build
+========================================================================
