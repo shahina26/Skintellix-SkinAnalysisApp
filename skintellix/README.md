@@ -1,6 +1,6 @@
 # ✦ Skintellix — Smart Skin. Smart Choices.
 
-> India's AI-powered skin analysis & beauty shopping platform with real-time price comparison across 10+ platforms.
+> A MERN stack skincare recommendation and beauty shopping platform designed for Indian users.
 
 ![Skintellix Banner](https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=1200&h=400&fit=crop&q=80)
 
@@ -10,11 +10,11 @@
 
 **Skintellix** is a full-stack, production-ready Indian beauty platform that combines:
 
-- 🔬 **AI Skin Analysis** — 5-question quiz identifies skin type, tone & concerns
-- 💰 **Real-time Price Comparison** — Same product compared across Amazon, Flipkart, Nykaa, Myntra, Purplle, Tata CLiQ, Meesho, AJIO, BigBasket & Blinkit
+- 🔬 **Skin Analysis based on user responses** — 5-question quiz identifies skin type, tone & concerns
+- 💰 **Multi-platform Price Comparison** — Same product compared across Amazon, Flipkart, Nykaa, Myntra, Purplle, Tata CLiQ, Meesho, AJIO, BigBasket & Blinkit
 - 💄 **Makeup Recommendations** — Shade finder for all Indian skin tones (Fair → Deep)
 - 🛍️ **150+ Curated Products** — Skincare, makeup, haircare & bodycare
-- 📱 **Responsive Design** — Mobile-first, works beautifully on all devices
+- 🌐 **Web Application** — Designed to run in modern desktop web browsers
 - 🇮🇳 **Built for India** — Designed for Indian skin tones, budgets & platforms
 
 ---
@@ -67,7 +67,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/skintellix.git
+   git clone https://github.com/shahina26/Skintellix-SkinAnalysisApp.git
    cd skintellix
    ```
 
@@ -208,7 +208,6 @@ skintellix/
 
 ---
 
-## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
@@ -355,18 +354,18 @@ GET  /api/ingredients/search    # Ingredient search
 
 ---
 
-## 🔮 Roadmap
+## 🔮 Future Enhancements ##
 
-- [ ] Google Vision API integration for real AI image analysis
-- [ ] Price alert notifications (email/SMS via Twilio)
-- [ ] Affiliate link tracking and commission management
-- [ ] AR try-on for makeup (WebAR)
-- [ ] Dermatologist chat (teleconsultation)
-- [ ] Skin journey tracker with photo comparison
-- [ ] WhatsApp chatbot integration
-- [ ] Hindi/regional language support
-- [ ] iOS & Android apps (React Native)
-- [ ] Admin dashboard for content management
+- [ ] AI-based skin image analysis using computer vision
+- [ ] Real-time product price synchronization across e-commerce platforms
+- [ ] Personalized skincare routine recommendations
+- [ ] Product wishlist and price alert notifications
+- [ ] Skin progress tracking with image history
+- [ ] Multi-language support (Hindi and other regional languages)
+- [ ] Admin dashboard for product and content management
+- [ ] Email notifications for skincare reminders
+- [ ] Mobile application using React Native
+- [ ] AI-powered chatbot for skincare guidance
 
 ---
 
@@ -374,12 +373,5 @@ GET  /api/ingredients/search    # Ingredient search
 
 Skintellix is designed specifically for the Indian beauty consumer — celebrating all skin tones from fair to deep, supporting both budget and luxury segments, and integrating with India's most popular e-commerce platforms.
 
----
 
-## 📄 License
-
-MIT License — Free to use and modify for personal and commercial projects.
-
----
-
-*© 2025 Skintellix. All rights reserved.*
+*© 2025 Skintellix. All rights re
