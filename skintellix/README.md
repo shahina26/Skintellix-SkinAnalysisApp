@@ -372,6 +372,3 @@ GET  /api/ingredients/search    # Ingredient search
 ## 🇮🇳 Made with ♥ in India
 
 Skintellix is designed specifically for the Indian beauty consumer — celebrating all skin tones from fair to deep, supporting both budget and luxury segments, and integrating with India's most popular e-commerce platforms.
-
-
-*© 2025 Skintellix. All rights re
